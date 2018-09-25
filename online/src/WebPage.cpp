@@ -1,0 +1,150 @@
+ ///
+ /// @file    WebPage.cpp
+ /// @author  lemon(haohb13@gmail.com)
+ /// @date    2018-09-25 11:46:37
+ ///
+nclude "WebPage.hpp"
+
+#include <stdlib.h>
+#include <iostream>
+#include <queue>
+#include <algorithm>
+#include <sstream>
+
+using std::cout;
+using std::endl;
+using std::priority_queue;
+using std::pair;
+using std::make_pair;
+using std::istringstream;
+
+namespace wd
+{
+struct WordFreqCompare
+{
+	bool operator()(const pair<string,int> &left,const pair<string,int> &right)
+	{
+		if(left.second<right.second)
+			return true;
+		else if(left.second==right.second&&left.first>right.first)
+			return true;
+		else
+			return false;
+
+	}
+};
+WebPage::WebPage(string &doc,Configuration &config,WordSegmentation &jieba)
+{
+	_topWords.reserve(TOPK_NUMBER);
+	processDoc(doc,config,jieba);
+}
+void WebPage::processDoc(const string &doc,Configuration &config,WordSegmentation &jieba)
+{
+	string docIdHead = "<docid>";
+	string docIdTail = "</docid>";
+	string docUrlHead = "<link>";
+	string docUrlTail = "</link>";
+	string docTitleHead = "<title>";
+	string docTitleTail = "</title>";
+	string docContentHead = "<content>";
+	string docContentTail = "</content>";
+	
+	//提取文档的docid
+	int bpos=doc.find(docIdHead);
+	int epos=doc.find(docIdTail);
+	string docId=doc.substr(bpos+docIdHead.size(),epos-bpos-docIdHead.size());
+	_docId=atoi(docId.c_str());
+	//Title
+	bpos=doc.find(docTitleHead);
+	epos=doc.find(docTitleTail);
+	_docTitle=doc.substr(bpos+docTitleHead.size(),epos-bpos-docTitleHead.size());
+	//Url
+	bpos=doc.find(docUrlHead);
+	epos=doc.find(docUrlTail);
+	docUrl=doc.substr(bpos+docUrlHead.size(),epos-bpos-docUrlHead.size());
+	//Content
+	bpos=doc.find(docContentHead);
+	epos=doc.find(docContentTail);
+	_docId=doc.substr(bpos+docContentHead.size(),epos-bpos-docContentHead.size());
+	vector<string> wordsVec=jieba(_docContent.c_str());
+	set<string> &stopWordList=config.getStopWordList();
+	calcTopK(wordsVec,TOPK_NUMBER,stopWordList);
+}
+void WebPage::calcTopK(vector<string> &wordsVec,int k,set<string> &stopWordList)
+{
+	for(auto iter=wordsVec.begin();iter!=wordsVec.end();++iter)
+	{
+		auto sit=stopWordList.find(*iter);
+		if(sit==stopWordList.end())
+		{
+			++_wordsMap[*iter];
+		}
+	}
+	priority_queue<pair<string,int>,vector<pair<string,int> >,WordFreqCompare>
+		wordFreqQue(_wordsMap.begin(),_wordsMap.end());
+	while(!wordFreqQue.empty())
+	{
+		string top=wordFreqQue.top().first;
+		wordFreqQue.pop();
+		if(top.size()==1&&(static_cast<unsigned int>(top[0])==10||
+					static_cast<unsigned int>(top[0])==13))
+		{continue;}
+		_topWords.push_back(top);
+		if(_topWords.size()>=TOPK_NUMBER)
+		{
+			break;
+		}
+	}
+}
+//判断两篇文档是否相同
+bool operator==(const WebPage &lhs,const WebPage &rhs)
+{
+	int commNum=0;
+	auto lIter=lhs._topWords.begin();
+	for(;lIter!=lhs._topWords.end();++lIter)
+	{
+		commNum+=std::count(rhs._topWords.begin(),rhs._topWords.end(),*lIter)
+	}
+	int lhsNum=lhs._topWords.size();
+	int rhsNum=rhs._topWords.size();
+	int totalNum=lhsNum<rhsNum?lhsNum:rhsNum;
+	if(static_cast<double>(commNum)/totalNum>0.75)
+	{
+		return true;
+	}
+	else
+		return false;
+}
+//对文档按照docId进行排序
+bool operator<(const WebPage &lhs,const WebPage &rhs)
+{
+	if(lhs._docId<rhs._docId)
+		return true;
+	else
+		return false;
+}
+string WebPage::summary(const vector<string> &queryWords)
+{
+	vector<string> summaryVec;
+	istringstream iss(_docContent);
+	string line;
+	while(iss>>line)
+	{
+		for(auto word:queryWords)
+		{
+			if(line.find(word)!=string::npos)
+			{
+				summaryVec.push_back(line);
+			}
+		}
+		if(summaryVec.size()>=5)
+		{break;}
+	}
+	string summary;
+	for(auto line:summaryVec)
+	{
+		summary.append(line).append("\n");
+	}
+	return summary;
+}
+}
