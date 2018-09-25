@@ -36,7 +36,10 @@ void PageLibPreprocessor::readInfoFromFile()
 {
 	map<string,string> &configMap=_conf.getConfigMap();
 	string pageLibPath=configMap[RIPEPAGELIB_KEY];//这里得到网页库文件的路径
-	string offsetIfs(offsetLibPath.c_str());
+	string offsetLibPath=configMap[OFFSETLIB_KEY];//拿到网页偏移库的文件路径
+
+	ifstream pageIfs(pgeLibPath.c_str());
+	ifstream offsetIfs(offsetLibPath.c_str());
 	if((!pageIfs.good())||(!offsetIfs.good()))
 	{
 		cout<<"page or offset lib open error"<<endl;
@@ -123,7 +126,7 @@ void PageLibPreprocessor::buildInvertIndexTable()
 	}
 #endif
 }
-
+//存放经过处理的网页库、网页偏移库、倒排索引
 void PageLibPreprocessor::storeOnDisk()
 {
 	sort(_pageLib.begin(),_pageLib.end());

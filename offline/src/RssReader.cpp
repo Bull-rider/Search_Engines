@@ -36,16 +36,17 @@ void RssReader::loadFeedFiles()//处理容器中的每一个文件
 void RssReader::loadFeedFile(const string &filename)
 {
 	XMLDocument doc;
-	doc.LoadFile(filename.c_str());
+	doc.LoadFile(filename.c_str());//加载html文件
 	if(errorID)
 	{
 		cout<<"XMLDocument LoadFile error!"<<endl;
 	}
 	else
 	{
-		parseRss(doc);
+		parseRss(doc);//解析html文件
 	}
 }
+//把经过解析的html文件存放到容器中，即产生网页库。
 void RssReader::makePages(vector<string> &pages)//生成网页库
 {
 	cout<<"pages's size="<<_items.size()<<endl;
@@ -62,16 +63,16 @@ void RssReader::makePages(vector<string> &pages)//生成网页库
 		pages.push_back(page);//循环读取内容并插入到网页库中
 	}
 }
-
+//解析html文件
 void RssReader::parseRss(XMLDocument &doc)
 {
 	cout<<"parsRss(XMLDocument &doc)"<<endl;
-	XMLElement *root=doc.FirstChildElement();
+	XMLElement *root=doc.FirstChildElement();//根节点
 	//<channel>
-	XMLElement *channel=root->firstChildElement("channel");
+	XMLElement *channel=root->FirstChildElement("channel");
 	//<item>
 	XMLElement *item=channel->FirstChildElement("item");
-	for(;item;item=item->NextSiblingElement())
+	for(;item;item=item->NextSiblingElement())//用迭代器循环获取item节点
 	{
 		shared_ptr<RssItem> rssItemPtr(new RssItem);//创建一个RessItem类型的智能指针
 		//智能指针指向的消息体包含标题、连接、概述、内容
@@ -81,7 +82,7 @@ void RssReader::parseRss(XMLDocument &doc)
 		const char *itemlink=item->FirstChildElement("link")->GetText();
 		const char *itemDescription=item->FirstChildElement("description")->GetText();
 		const char *iContent=nullptr;
-		XMLElement *contentEncoded=item->FirstChildElement("content:encoded");
+		XMLElement *contentEncoded=item->FirstChildElement("content:encoded");//结束
 		if(contentEncoded)
 		{
 			iContent=contentEncoded->GetText();
@@ -90,8 +91,8 @@ void RssReader::parseRss(XMLDocument &doc)
 		{
 			iContent=itemDescription;
 		}
-		string szReg="<.*?>";
-
+		string szReg="<.*?>";//正则表达式去除<>
+		//用到boost库中的regex_replace()函数
 		boost::regex fmt(szReg);
 		string content=boost::regex_replace(string(iContent),fmt,string(""));
 

@@ -22,6 +22,7 @@ PageLib::PageLib(Configuration &conf,DirScanner &dirScanner)
 void PageLib::create()
 {
 	std::vector<std::string> &vecFiles=_dirScanner.files();
+	//创建RssReader对象，对html类型的文件进行处理，
 	RssReader reader(vecFiles);
 	reader.loadFeedFiles();
 	reader.makePages(_vecPages);
@@ -41,7 +42,7 @@ void PageLib::store()
 		std::cout<<"ofstream open error!"<<std::endl;
 		return;
 	}
-	for(size_t idx=0;idx!=_vecPages.size();++idx)
+	for(size_t idx=0;idx!=_vecPages.size();++idx)//产生网页库和网页偏移库文件
 	{
 		int id=idx+1;
 		int length=_vecPages[idx].size();

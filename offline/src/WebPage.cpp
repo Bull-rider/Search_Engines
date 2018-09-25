@@ -76,9 +76,10 @@ void WebPage::calcTop(vector<string> &wordsVec,int k,set<string> &stopWordList)
 			++_wordsMap[*iter];
 		}
 	}
+	//进行排序
 	priority_queue<pair<string,int>,vector<pair<string,int> >,WordFreqCompare>
 		wordFreqQue(_wordsMap.begin(),_wordsMap.end());
-	while(!wordFreqQue.empty())
+	while(!wordFreqQue.empty())//把频率最高的前20个词放入_topWords容器中
 	{
 		string top=wordFreqQue.top().first;
 		wordFreqQue.pop();

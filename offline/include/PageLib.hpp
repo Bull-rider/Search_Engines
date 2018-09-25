@@ -21,7 +21,7 @@ public:
 private:
 	Configuration &_conf;
 	DirScanner &_dirScanner;
-	std::vector<std::string> _vecPages;//存放
+	std::vector<std::string> _vecPages;//存放经过类RssReader中函数解析的网页item
 };
 }
 #endif
